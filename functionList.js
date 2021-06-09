@@ -1,18 +1,20 @@
 const { getObjectFromS3, putObjectToS3, seedDataObjectToS3, deleteRowFromDebtObjt, addRowToDebtObjt } = require("./s3.js");
 
-exports.callHandler = async (event) => {
+exports.callHandler = async (body) => {
   try {
-    if(event.functionName == 'queryData') {
+    console.log(body.functionName == "resetData", body);
+    if(body.functionName == "queryData") {
       let res = await getObjectFromS3();
       return res;
-    } else if (event.functionName == 'resetData') {
+    } else if (body.functionName == "resetData") {
       let res = await seedDataObjectToS3();
+      console.log(res);
       return res;
-    } else if(event.functionName == 'addRow') {
-      let res = await addRowToDebtObjt(event.data);
+    } else if(body.functionName == "addRow") {
+      let res = await addRowToDebtObjt(body.data);
       return res;
-    } else if (event.functionName == 'removeRow') {
-      let res = await deleteRowFromDebtObjt(event.data);
+    } else if (body.functionName == "removeRow") {
+      let res = await deleteRowFromDebtObjt(body.data);
       return res;
     } else {
       let err = {
