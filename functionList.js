@@ -1,8 +1,7 @@
-const { getObjectFromS3, putObjectToS3, seedDataObjectToS3, deleteRowFromDebtObjt, addRowToDebtObjt } = require("./s3.js");
+const { getObjectFromS3, seedDataObjectToS3, deleteRowFromDebtObjt, addRowToDebtObjt } = require("./s3.js");
 
 exports.callHandler = async (body) => {
   try {
-    console.log(body.functionName == "resetData", body);
     if(body.functionName == "queryData") {
       let res = await getObjectFromS3();
       return res;
@@ -18,13 +17,13 @@ exports.callHandler = async (body) => {
       return res;
     } else {
       let err = {
-        status: 401,
+        status: 400,
         message: "no matching call"
       }
       throw err;
     }
   } catch(err) {
-    console.error(err);
+    console.error(err, 'error shows here');
     throw err;
   }
 }

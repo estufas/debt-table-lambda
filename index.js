@@ -15,10 +15,15 @@ exports.handler = async (event, context, callback) => {
       }
     };
   } catch(err) {
-    console.error(err)
     const response = {
-      statusCode: 500,
-      body: err,
+      statusCode: err.statusCode,
+      body: JSON.stringify({
+        id: context.awsRequestId,
+        message: err.message
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      }
     };
     return response
   };

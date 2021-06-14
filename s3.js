@@ -1,27 +1,6 @@
 const AWS = require('aws-sdk');
 const axios = require("axios");
 
-async function putObjectToS3(bucket, key, data){
-  var s3 = new AWS.S3();
-  const objectName = 'helloworld.json'; // File name which you want to put in s3 bucket
-  const objectData = '{ "message" : "Hello World!" }'; // file data you want to put
-  const objectType = 'application/json'; // type of file
-  try {
-    // setup params for putObject
-    const params = {
-      Bucket: bucket,
-      Key: objectName,
-      Body: objectData,
-      ContentType: objectType,
-    };
-    let result = await s3.putObject(params).promise();
-    console.log(`File uploaded successfully at https:/` + bucket +   `.s3.amazonaws.com/` + objectName);
-    return result;
-  } catch (error) {
-    console.log('error');
-  }
-};
-
 async function seedDataObjectToS3(){
   const s3 = new AWS.S3();
   try {
@@ -36,8 +15,10 @@ async function seedDataObjectToS3(){
     let result = await s3.putObject(params).promise();
     console.log(`File uploaded successfully at https:/` + process.env.BUCKET +   `.s3.amazonaws.com/`);
     return debtData.data;
-  } catch (error) {
-    console.log('error');
+  } catch (err) {
+    console.err(err);
+    err['status'] = err.response.statusCode;
+    throw err;
   }
 };
 
@@ -45,8 +26,14 @@ async function addRowToDebtObjt(data){
   const s3 = new AWS.S3();
   try {
     let debtData = await getObjectFromS3();
+    if (data.firstName == data.creditorName) {
+      let err = {
+        "statusCode": 400,
+        "message": "creditor and firstName cannot be the same"
+      };
+      throw err;
+    }
     let objectData = debtData.concat(data);
-    console.log(objectData);
     const params = {
       Bucket: process.env.BUCKET,
       Key: 'debt-file.json',
@@ -56,8 +43,8 @@ async function addRowToDebtObjt(data){
     let result = await s3.putObject(params).promise();
     console.log(`File uploaded successfully at https:/` + process.env.BUCKET +   `.s3.amazonaws.com/`);
     return objectData;
-  } catch (error) {
-    console.log('error');
+  } catch (err) {
+    throw err;
   }
 };
 
@@ -79,8 +66,9 @@ async function deleteRowFromDebtObjt(rows){
     let result = await s3.putObject(params).promise();
     console.log(`File uploaded successfully at https:/` + process.env.BUCKET +   `.s3.amazonaws.com/`);
     return debtData;
-  } catch (error) {
-    console.log('error');
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 };
 
@@ -93,13 +81,13 @@ async function getObjectFromS3(){
     }
     let response = await s3.getObject(params).promise();
     response = JSON.parse(response.Body.toString('utf-8'))
-    console.log(response)
     return response;
   } catch (err) {
-    console.error(err)
+    console.error(err);
+    throw err;
   }
 };
 
 module.exports = {
-  putObjectToS3, getObjectFromS3, seedDataObjectToS3, deleteRowFromDebtObjt, addRowToDebtObjt
+  getObjectFromS3, seedDataObjectToS3, deleteRowFromDebtObjt, addRowToDebtObjt
 }
